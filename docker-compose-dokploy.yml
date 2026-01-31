@@ -1,0 +1,71 @@
+version: "3.8"
+
+services:
+  docuseal:
+    image: docuseal/docuseal:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Koneksi DB internal docker network
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/docuseal
+
+      # OPTIONAL: kalau Docuseal butuh base URL / force https, kamu bisa tambahkan ini
+      # APP_URL: https://${HOST}
+      # FORCE_SSL: "true"
+    volumes:
+      - ./docuseal:/data/docuseal
+
+    # ❗JANGAN expose ports di Dokploy (Traefik yang handle routing)
+    # ports:
+    #   - "3000:3000"
+
+    labels:
+      - "traefik.enable=true"
+
+      # Router: domain
+      - "traefik.http.routers.docuseal.rule=Host(`${HOST}`)"
+
+      # HTTPS entrypoint (umumnya 'websecure' di Dokploy)
+      - "traefik.http.routers.docuseal.entrypoints=websecure"
+      - "traefik.http.routers.docuseal.tls=true"
+
+      # Service port internal container docuseal
+      - "traefik.http.services.docuseal.loadbalancer.server.port=3000"
+
+      # (Opsional) Redirect HTTP -> HTTPS (kalau Dokploy juga punya entrypoint 'web')
+      # - "traefik.http.routers.docuseal_http.rule=Host(`${HOST}`)"
+      # - "traefik.http.routers.docuseal_http.entrypoints=web"
+      # - "traefik.http.routers.docuseal_http.middlewares=redirect-to-https"
+      # - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+    networks:
+      - dokploy-network
+      - internal
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: docuseal
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d docuseal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+networks:
+  # ✅ Network Traefik milik Dokploy (biasanya sudah ada)
+  dokploy-network:
+    external: true
+
+  # Network internal antar service (tidak diexpose)
+  internal:
+    driver: bridge
