@@ -591,6 +591,9 @@ en: &en
   user_nameid_not_found: 'User %{nameid} not found.'
   sso_settings_have_been_updated: SSO settings have been updated.
   sms_has_been_sent: SMS has been sent.
+  sms_has_been_sent_already: SMS has been sent already.
+  phone_number_is_required: Phone number is required.
+  send_sms_invitation: Send SMS invitation
   account_has_been_created: Account has been created.
   account_has_been_updated: Account has been updated.
   account_has_been_removed: Account has been removed.
@@ -804,11 +807,11 @@ en: &en
   this_folder_is_not_shared_with_anyone: This folder is not shared with anyone.
   folder_shared_successfully: Folder shared successfully.
   users: Users
-  phone_otp: Phone OTP
-  phone_otp_webhook: Phone OTP Webhook
-  configure_webhook_to_receive_phone_otp_codes_for_user_verification: Configure a webhook to receive phone OTP codes for user verification before signing.
+  phone_otp: 2FA Webhook
+  phone_otp_webhook: 2FA Verification Webhook
+  configure_webhook_to_receive_phone_otp_codes_for_user_verification: Configure a webhook to send OTP verification codes via SMS, WhatsApp, email, or any messaging service for 2FA before signing.
   webhook_url: Webhook URL
-  the_otp_will_be_sent_to_this_url_via_post_request: The OTP will be sent to this URL via POST request.
+  the_otp_will_be_sent_to_this_url_via_post_request: Verification codes and invitations will be sent to this URL via POST request.
   bearer_token: Bearer Token
   your_api_key_or_bearer_token: Your API key or bearer token
   optional_bearer_token_for_authorization_header: Optional. Bearer token for Authorization header.

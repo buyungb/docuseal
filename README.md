@@ -42,19 +42,20 @@ DocuSeal is an open source platform that provides secure and efficient digital d
 - PDF signature verification
 - Users management
 - Role-based access control (Admin, Editor, Viewer)
-- Phone OTP verification via webhook (integrate with your SMS gateway)
+- **Conditional fields and formulas**
+- **2FA verification** via webhook (integrate with SMS, WhatsApp, Telegram, email, or any service)
+- **Signing invitations** via webhook (SMS, WhatsApp, email services, or any custom integration)
+- **Email reminders configuration** (requires scheduled job setup)
 - Consent document requirement before signing
 - Mobile-optimized
 - 7 UI languages with signing available in 14 languages
 - API and Webhooks for integrations
 - Easy to deploy in minutes
 
-## Pro Features
+## Pro Features (Official DocuSeal Pro)
 - Company logo and white-label
 - User roles
-- Automated reminders
-- Invitation and identify verification via SMS
-- Conditional fields and formulas
+- Automated reminders (fully managed)
 - Bulk send with CSV, XLSX spreadsheet import
 - SSO / SAML
 - Template creation with HTML API ([Guide](https://www.docuseal.com/guides/create-pdf-document-fillable-form-with-html-api))
@@ -110,12 +111,34 @@ docker exec -it -w /app <container_name> bundle exec rails db:migrate
 
 ## Custom Features
 
-### Phone Webhook Integration
+### Conditional Fields and Formulas
 
-Send signing invitations and OTP codes to your own SMS gateway via webhook. Configure in **Settings > Phone OTP**:
+This fork enables conditional fields and formulas in the template builder:
 
-- **Webhook URL**: Your SMS gateway endpoint
+- **Conditional Fields**: Show or hide fields based on other field values. Click on a field and look for the "Conditions" option in field settings.
+- **Formulas**: Create calculated number fields based on other field values. Useful for totals, tax calculations, etc.
+
+### Email Reminders
+
+Configure automatic email reminders in **Settings > Notifications**:
+- Set up to 3 reminder intervals (first, second, third reminder)
+- Available durations: 1 hour to 30 days
+
+> **Note**: The reminder configuration UI is enabled, but automatic sending requires setting up a scheduled job (cron/sidekiq-scheduler) to process pending reminders.
+
+### 2FA Verification Webhook
+
+Send signing invitations and OTP verification codes via webhook to any messaging service. Configure in **Settings > 2FA Webhook**:
+
+- **Webhook URL**: Your messaging service endpoint (SMS gateway, WhatsApp API, Telegram bot, email service, etc.)
 - **Bearer Token**: Optional authentication token
+
+**Supported integrations:**
+- SMS gateways (Twilio, Vonage, MessageBird, etc.)
+- WhatsApp Business API
+- Telegram Bot API
+- Email services (SendGrid, Mailgun, etc.)
+- Any custom webhook endpoint
 
 #### Invitation Webhook
 When a submitter has a phone number, the system sends an invitation webhook:
@@ -135,10 +158,13 @@ When a submitter has a phone number, the system sends an invitation webhook:
 }
 ```
 
-#### OTP Verification Webhook
-When phone 2FA is enabled for a template:
+Your webhook endpoint can use the `phone_number`, `submitter_email`, or `submitter_name` to route the message to SMS, WhatsApp, email, or any other channel.
+
+#### 2FA OTP Webhook
+When 2FA is enabled for a template, the system sends an OTP verification code:
 ```json
 {
+  "event_type": "otp_verification",
   "phone_number": "+1234567890",
   "otp": "123456",
   "timestamp": "2024-01-15T10:30:00Z",
@@ -149,6 +175,14 @@ When phone 2FA is enabled for a template:
   "template_name": "Contract Template"
 }
 ```
+
+### 2FA for Templates
+
+Require verification before signers can access the signing form:
+
+1. Go to **Template > Preferences > Form Preferences**
+2. Enable "Require phone 2FA to open" or "Require email 2FA to open"
+3. Signers will receive an OTP code via your configured 2FA webhook (SMS, WhatsApp, email, etc.) before accessing the form
 
 ### Consent Document Requirement
 

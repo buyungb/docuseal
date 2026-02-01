@@ -9,7 +9,7 @@
     <%= form_for @encrypted_config, url: settings_phone_otp_index_path, method: :post, html: { autocomplete: 'off', class: 'space-y-4' } do |f| %>
       <div class="form-control">
         <%= f.label :url, t('webhook_url'), class: 'label' %>
-        <%= f.text_field :url, value: @encrypted_config.value&.dig('url'), class: 'base-input w-full', placeholder: 'https://your-sms-gateway.com/api/send-otp' %>
+        <%= f.text_field :url, value: @encrypted_config.value&.dig('url'), class: 'base-input w-full', placeholder: 'https://your-webhook-endpoint.com/api/send-otp' %>
         <label class="label">
           <span class="label-text-alt text-base-content/70">
             <%= t('the_otp_will_be_sent_to_this_url_via_post_request') %>
@@ -36,6 +36,7 @@
         </div>
         <div class="collapse-content">
           <pre class="text-xs bg-base-300 p-3 rounded overflow-x-auto"><code>{
+  "event_type": "otp_verification",
   "phone_number": "+1234567890",
   "otp": "123456",
   "timestamp": "2024-01-15T10:30:00Z",
@@ -47,6 +48,9 @@
 }</code></pre>
           <p class="text-sm text-base-content/70 mt-2">
             <%= t('headers_include_content_type_application_json_and_authorization_bearer_your_token') %>
+          </p>
+          <p class="text-sm text-base-content/70 mt-2">
+            Use <code>phone_number</code>, <code>submitter_email</code>, or <code>submitter_name</code> to route via SMS, WhatsApp, email, or any channel.
           </p>
         </div>
       </div>

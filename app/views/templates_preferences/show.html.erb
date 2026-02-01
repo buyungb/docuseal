@@ -83,6 +83,14 @@
             <%= render 'templates_preferences/form_fields', ff: %>
             <div class="flex items-center justify-between py-2.5 px-1 mb-2">
               <span>
+                <%= t('require_phone_2fa_to_open') %>
+              </span>
+              <submit-form data-on="change" class="flex">
+                <%= ff.check_box :require_phone_2fa, { checked: ff.object.require_phone_2fa == true, class: 'toggle' }, 'true', 'false' %>
+              </submit-form>
+            </div>
+            <div class="flex items-center justify-between py-2.5 px-1 mb-2">
+              <span>
                 <%= t('require_email_2fa_to_open') %>
               </span>
               <submit-form data-on="change" class="flex">

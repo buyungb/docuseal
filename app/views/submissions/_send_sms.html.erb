@@ -1,3 +1,6 @@
 <div class="form-control">
-  <%= render 'sms_settings/placeholder' %>
+  <div class="flex items-center justify-between py-2">
+    <span><%= t('send_sms_invitation') %></span>
+    <%= f.check_box 'submitters[][preferences][send_sms]', { checked: local_assigns[:checked] == true, class: 'toggle' }, 'true', 'false' %>
+  </div>
 </div>
