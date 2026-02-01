@@ -6,19 +6,30 @@ module Abilities
 
     # For editors - can see own folders OR folders shared with them OR default folder
     def editor_collection(user)
-      shared_folder_ids = FolderAccess.where(user_id: user.id).select(:template_folder_id)
+      base_query = TemplateFolder.where(account_id: user.account_id)
 
-      TemplateFolder.where(account_id: user.account_id).where(
-        TemplateFolder.arel_table[:author_id].eq(user.id)
-          .or(TemplateFolder.arel_table[:id].in(shared_folder_ids.arel))
-          .or(TemplateFolder.arel_table[:name].eq(TemplateFolder::DEFAULT_NAME))
-      )
+      # Check if FolderAccess table exists (for migrations compatibility)
+      if table_exists?
+        shared_folder_ids = FolderAccess.where(user_id: user.id).select(:template_folder_id)
+
+        base_query.where(
+          TemplateFolder.arel_table[:author_id].eq(user.id)
+            .or(TemplateFolder.arel_table[:id].in(shared_folder_ids.arel))
+            .or(TemplateFolder.arel_table[:name].eq(TemplateFolder::DEFAULT_NAME))
+        )
+      else
+        # Fallback: own folders + default folder only
+        base_query.where(
+          TemplateFolder.arel_table[:author_id].eq(user.id)
+            .or(TemplateFolder.arel_table[:name].eq(TemplateFolder::DEFAULT_NAME))
+        )
+      end
     end
 
     def editor_entity(folder, user:)
       return true if folder.account_id.blank?
       return true if folder.author_id == user.id && folder.account_id == user.account_id
-      return true if folder.folder_accesses.exists?(user_id: user.id)
+      return true if table_exists? && folder.folder_accesses.exists?(user_id: user.id)
       return true if folder.name == TemplateFolder::DEFAULT_NAME && folder.account_id == user.account_id
 
       false
@@ -26,19 +37,32 @@ module Abilities
 
     # For viewers - can only see folders explicitly shared with them OR default folder
     def viewer_collection(user)
-      shared_folder_ids = FolderAccess.where(user_id: user.id).select(:template_folder_id)
+      base_query = TemplateFolder.where(account_id: user.account_id)
 
-      TemplateFolder.where(account_id: user.account_id).where(
-        TemplateFolder.arel_table[:id].in(shared_folder_ids.arel)
-          .or(TemplateFolder.arel_table[:name].eq(TemplateFolder::DEFAULT_NAME))
-      )
+      if table_exists?
+        shared_folder_ids = FolderAccess.where(user_id: user.id).select(:template_folder_id)
+
+        base_query.where(
+          TemplateFolder.arel_table[:id].in(shared_folder_ids.arel)
+            .or(TemplateFolder.arel_table[:name].eq(TemplateFolder::DEFAULT_NAME))
+        )
+      else
+        # Fallback: default folder only
+        base_query.where(name: TemplateFolder::DEFAULT_NAME)
+      end
     end
 
     def viewer_entity(folder, user:)
       return true if folder.account_id.blank?
-      return true if folder.folder_accesses.exists?(user_id: user.id)
+      return true if table_exists? && folder.folder_accesses.exists?(user_id: user.id)
       return true if folder.name == TemplateFolder::DEFAULT_NAME && folder.account_id == user.account_id
 
+      false
+    end
+
+    def table_exists?
+      @table_exists ||= ActiveRecord::Base.connection.table_exists?('folder_accesses')
+    rescue StandardError
       false
     end
   end
